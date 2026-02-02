@@ -1,4 +1,7 @@
 # Agentic ESG Advisor for Urban Waste Management & Circular Economy
+## Live Demo
+🔗 **Streamlit Application:**  
+https://2tsdwqkymkjkkbx69ujgw5.streamlit.app/
 
 ## Overview
 This project is an **Agentic ESG Decision-Support System** designed to help small and medium-sized businesses (SMBs) understand their ESG readiness and prioritize **low-cost, high-impact sustainability actions**, with a primary focus on **urban waste management and circular economy practices**.
