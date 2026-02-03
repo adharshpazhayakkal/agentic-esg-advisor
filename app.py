@@ -2,7 +2,7 @@ import streamlit as st
 from dotenv import load_dotenv
 load_dotenv()
 
-# ---------------- Core imports ----------------
+# ---------------- Backend imports ----------------
 from backend.input_handler import validate_inputs
 from backend.context_builder import build_esg_context
 from backend.agent import run_esg_agent
@@ -10,19 +10,22 @@ from backend.agent_rag import run_esg_agent_rag
 from backend.retrieval import retrieve_relevant_chunks
 from backend.formatter import format_response
 
-# ---------------- App Title ----------------
-st.set_page_config(page_title="Agentic ESG Advisor", layout="centered")
+# ---------------- App Config ----------------
+st.set_page_config(
+    page_title="Agentic ESG Advisor",
+    layout="centered"
+)
 
 st.title("Agentic ESG Advisor for Urban Waste Management & Circular Economy")
 
 tab1, tab2 = st.tabs(["ESG Advisor", "Document-Aware ESG (Advanced)"])
 
 # ============================================================
-# TAB 1 — CORE ESG ADVISOR (PRIMARY, STABLE)
+# TAB 1 — CORE ESG ADVISOR (PRIMARY)
 # ============================================================
 with tab1:
     st.header("ESG Advisor (Input-Based)")
-    st.caption("Decision-support for small businesses using agentic reasoning")
+    st.caption("Agentic decision-support for small and medium businesses")
 
     inputs = {
         "business_type": st.selectbox(
@@ -58,13 +61,13 @@ with tab1:
 
 
 # ============================================================
-# TAB 2 — DOCUMENT-AWARE ESG (ADVANCED, OPTIONAL)
+# TAB 2 — DOCUMENT-AWARE ESG (ADVANCED EXTENSION)
 # ============================================================
 with tab2:
     st.header("Document-Aware ESG (Advanced)")
     st.caption(
-        "Ground ESG recommendations using internal company documents. "
-        "This is an optional extension and does not replace the core advisor."
+        "Optional extension that grounds ESG recommendations using internal company documents. "
+        "The core ESG advisor remains unchanged."
     )
 
     st.subheader("Upload ESG-Relevant Documents (Optional)")
@@ -104,11 +107,11 @@ with tab2:
         "waste segregation",
         "hazardous waste",
         "waste disposal",
+        "recycling",
         "diesel generator",
         "energy usage",
         "responsibility",
-        "authorization",
-        "recycling"
+        "authorization"
     ]
 
     retrieved_evidence = []
@@ -130,20 +133,24 @@ with tab2:
     if retrieved_evidence:
         st.subheader("Retrieved ESG Evidence")
         st.info(
-            "The following text snippets were retrieved using sparse (BM25) retrieval "
-            "and will be used as supporting evidence."
+            "The following snippets were retrieved using sparse (BM25) retrieval "
+            "and are used as supporting evidence for ESG reasoning."
         )
 
         for ev in retrieved_evidence:
             st.write(f"- {ev}")
 
-        st.subheader("Generate Document-Grounded ESG Advisory")
-
         if st.button("Generate ESG Advisory (Document-Grounded)"):
             try:
-                # Use the SAME base inputs as Tab 1 for fairness
-                validate_inputs(inputs)
-                base_context = build_esg_context(inputs)
+                # ---- SAFE DEFAULT HANDLING (FIXES waste_types ERROR) ----
+                doc_inputs = inputs.copy()
+
+                if not doc_inputs["waste_types"]:
+                    doc_inputs["waste_types"] = ["Mixed"]
+
+                validate_inputs(doc_inputs)
+                base_context = build_esg_context(doc_inputs)
+
                 evidence_text = "\n".join(retrieved_evidence)
 
                 response = run_esg_agent_rag(

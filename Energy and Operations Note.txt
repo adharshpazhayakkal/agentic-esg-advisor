@@ -1,0 +1,14 @@
+Energy and Operations Note
+
+The facility primarily operates using grid electricity for production and office
+activities. Due to occasional power interruptions, a diesel generator is used as a
+backup energy source to ensure continuity of operations.
+
+Energy consumption is monitored through monthly electricity bills. No automated
+energy monitoring systems are currently in place.
+
+Basic practices such as switching off idle equipment and lighting are encouraged
+by supervisors, though there is no formal energy efficiency policy.
+
+Fuel usage for the diesel generator is recorded during procurement and maintenance
+activities. Renewable energy sources are currently not utilized.
