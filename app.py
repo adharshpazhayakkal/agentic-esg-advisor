@@ -12,87 +12,60 @@ from backend.formatter import format_response
 
 # ---------------- Page Configuration ----------------
 st.set_page_config(
-    page_title="ESG Decision-to-Action System",
+    page_title="ESG Decision Support System",
     layout="centered"
 )
 
-# ---------------- Title & Positioning ----------------
+# ---------------- Title ----------------
 st.title("ESG Decision-to-Action Advisory System")
 st.caption(
-    "Internal ESG decision support for small and medium-sized organizations. "
-    "This system assesses ESG maturity, identifies risks, and prioritizes "
-    "practical actions across waste management, energy use, and governance."
+    "A lightweight internal ESG decision-support tool to assess maturity, "
+    "identify risks, and prioritize practical actions for small and medium-sized organizations."
 )
 
-# ---------------- Tabs ----------------
 tab1, tab2 = st.tabs([
-    "ESG Assessment & Action Planning",
-    "Evidence-Grounded ESG Review"
+    "ESG Assessment",
+    "Document-Grounded ESG Review"
 ])
 
 # ============================================================
-# TAB 1 — ESG ASSESSMENT & ACTION PLANNING
+# TAB 1 — ESG ASSESSMENT (CORE SYSTEM)
 # ============================================================
 with tab1:
-    st.header("Organizational ESG Context")
+    st.header("Organizational Context")
     st.caption(
-        "Provide high-level operational context. Inputs are intentionally minimal "
-        "to reduce reporting burden while enabling meaningful ESG reasoning."
+        "Provide basic operational context. This assessment is designed to be completed "
+        "in under two minutes."
     )
 
-    # ---- Inputs (Professional Controls) ----
-    business_type = st.radio(
-        "Primary Operational Sector",
-        ["Manufacturing", "Retail", "Service"],
-        horizontal=True
-    )
-
-    business_size = st.radio(
-        "Organization Scale",
-        ["Micro (1–10 employees)", "Small (11–50 employees)", "Medium (51–250 employees)"]
-    )
-
-    waste_types = st.multiselect(
-        "Primary Waste Streams Generated",
-        ["Organic", "Plastic", "E-waste", "Mixed"],
-        help="Select all waste categories generated during normal operations"
-    )
-
-    energy_sources = st.multiselect(
-        "Primary Energy Sources",
-        ["Grid Electricity", "Diesel Generator", "Renewable (On-site / Off-site)"],
-        default=["Grid Electricity"]
-    )
-
-    waste_practice = st.select_slider(
-        "Waste Handling Maturity",
-        options=[
-            "No formal practices",
-            "Informal or partial practices",
-            "Standardized and documented practices"
-        ]
-    )
-
-    esg_ownership = st.radio(
-        "ESG Responsibility Ownership",
-        [
-            "No defined ownership",
-            "Handled informally by operations",
-            "Assigned to a specific role or team"
-        ]
-    )
-
-    # ---- Map UI inputs to backend-compatible structure ----
     inputs = {
-        "business_type": business_type,
-        "business_size": business_size.split(" ")[0],  # Micro / Small / Medium
-        "waste_types": waste_types,
-        "energy_source": "Mixed" if len(energy_sources) > 1 else energy_sources[0],
-        "waste_practice": waste_practice,
-        "esg_ownership": esg_ownership
+        "business_type": st.selectbox(
+            "Primary Business Activity",
+            ["Manufacturing", "Retail", "Service"]
+        ),
+        "business_size": st.selectbox(
+            "Organization Size",
+            ["Micro", "Small", "Medium"]
+        ),
+        "waste_types": st.multiselect(
+            "Waste Streams Generated",
+            ["Organic", "Plastic", "E-waste", "Mixed"],
+            help="Select all waste categories generated during normal operations"
+        ),
+        "energy_source": st.selectbox(
+            "Primary Energy Source",
+            ["Electricity", "Diesel", "Mixed"]
+        ),
+        "waste_practice": st.selectbox(
+            "Waste Handling Maturity",
+            [
+                "No formal segregation",
+                "Basic or informal segregation",
+                "Authorized and documented disposal"
+            ]
+        )
     }
 
-    # ---- Action Button ----
     if st.button("Generate ESG Action Plan"):
         try:
             validate_inputs(inputs)
@@ -103,18 +76,18 @@ with tab1:
             st.error(str(e))
 
     st.caption(
-        "This system provides ESG decision support and prioritization guidance. "
+        "This system provides ESG decision-support and prioritization guidance. "
         "It does not perform regulatory audits or certification."
     )
 
 # ============================================================
-# TAB 2 — EVIDENCE-GROUNDED ESG REVIEW
+# TAB 2 — DOCUMENT-GROUNDED ESG REVIEW (EXTENSION)
 # ============================================================
 with tab2:
     st.header("Evidence-Grounded ESG Review")
     st.caption(
         "Optional review using internal operational documents to validate declared practices. "
-        "Document evidence is used to strengthen or flag ESG risk assumptions."
+        "Missing or unclear documentation is treated as an ESG risk signal."
     )
 
     st.subheader("Internal Operational Documents (Optional)")
@@ -180,7 +153,7 @@ with tab2:
     if retrieved_evidence:
         st.subheader("Retrieved Evidence")
         st.info(
-            "The following excerpts were retrieved using controlled, keyword-based retrieval "
+            "The following excerpts were retrieved using controlled keyword-based retrieval "
             "and are used as supporting evidence for ESG reasoning."
         )
 
@@ -189,7 +162,7 @@ with tab2:
 
         if st.button("Generate Evidence-Grounded ESG Action Plan"):
             try:
-                # ---- Safe defaults for document-grounded mode ----
+                # Safe defaults for document-grounded mode
                 doc_inputs = inputs.copy()
                 if not doc_inputs["waste_types"]:
                     doc_inputs["waste_types"] = ["Mixed"]
@@ -212,8 +185,3 @@ with tab2:
             "No documents uploaded yet. Upload at least one document to enable "
             "evidence-grounded ESG reasoning."
         )
-
-    st.caption(
-        "Document evidence is treated as supportive input. "
-        "Missing or unclear documentation is considered an ESG risk signal."
-    )
