@@ -10,47 +10,90 @@ from backend.agent_rag import run_esg_agent_rag
 from backend.retrieval import retrieve_relevant_chunks
 from backend.formatter import format_response
 
-# ---------------- App Config ----------------
+# ---------------- Page Configuration ----------------
 st.set_page_config(
-    page_title="Agentic ESG Advisor",
+    page_title="ESG Decision-to-Action System",
     layout="centered"
 )
 
-st.title("Agentic ESG Advisor for Urban Waste Management & Circular Economy")
+# ---------------- Title & Positioning ----------------
+st.title("ESG Decision-to-Action Advisory System")
+st.caption(
+    "Internal ESG decision support for small and medium-sized organizations. "
+    "This system assesses ESG maturity, identifies risks, and prioritizes "
+    "practical actions across waste management, energy use, and governance."
+)
 
-tab1, tab2 = st.tabs(["ESG Advisor", "Document-Aware ESG (Advanced)"])
+# ---------------- Tabs ----------------
+tab1, tab2 = st.tabs([
+    "ESG Assessment & Action Planning",
+    "Evidence-Grounded ESG Review"
+])
 
 # ============================================================
-# TAB 1 — CORE ESG ADVISOR (PRIMARY)
+# TAB 1 — ESG ASSESSMENT & ACTION PLANNING
 # ============================================================
 with tab1:
-    st.header("ESG Advisor (Input-Based)")
-    st.caption("Agentic decision-support for small and medium businesses")
+    st.header("Organizational ESG Context")
+    st.caption(
+        "Provide high-level operational context. Inputs are intentionally minimal "
+        "to reduce reporting burden while enabling meaningful ESG reasoning."
+    )
 
+    # ---- Inputs (Professional Controls) ----
+    business_type = st.radio(
+        "Primary Operational Sector",
+        ["Manufacturing", "Retail", "Service"],
+        horizontal=True
+    )
+
+    business_size = st.radio(
+        "Organization Scale",
+        ["Micro (1–10 employees)", "Small (11–50 employees)", "Medium (51–250 employees)"]
+    )
+
+    waste_types = st.multiselect(
+        "Primary Waste Streams Generated",
+        ["Organic", "Plastic", "E-waste", "Mixed"],
+        help="Select all waste categories generated during normal operations"
+    )
+
+    energy_sources = st.multiselect(
+        "Primary Energy Sources",
+        ["Grid Electricity", "Diesel Generator", "Renewable (On-site / Off-site)"],
+        default=["Grid Electricity"]
+    )
+
+    waste_practice = st.select_slider(
+        "Waste Handling Maturity",
+        options=[
+            "No formal practices",
+            "Informal or partial practices",
+            "Standardized and documented practices"
+        ]
+    )
+
+    esg_ownership = st.radio(
+        "ESG Responsibility Ownership",
+        [
+            "No defined ownership",
+            "Handled informally by operations",
+            "Assigned to a specific role or team"
+        ]
+    )
+
+    # ---- Map UI inputs to backend-compatible structure ----
     inputs = {
-        "business_type": st.selectbox(
-            "Business Type",
-            ["Manufacturing", "Retail", "Service"]
-        ),
-        "business_size": st.selectbox(
-            "Business Size",
-            ["Micro", "Small", "Medium"]
-        ),
-        "waste_types": st.multiselect(
-            "Waste Types",
-            ["Organic", "Plastic", "E-waste", "Mixed"]
-        ),
-        "energy_source": st.selectbox(
-            "Energy Source",
-            ["Electricity", "Diesel", "Mixed"]
-        ),
-        "waste_practice": st.selectbox(
-            "Waste Handling Practice",
-            ["No segregation", "Basic segregation", "Authorized disposal"]
-        )
+        "business_type": business_type,
+        "business_size": business_size.split(" ")[0],  # Micro / Small / Medium
+        "waste_types": waste_types,
+        "energy_source": "Mixed" if len(energy_sources) > 1 else energy_sources[0],
+        "waste_practice": waste_practice,
+        "esg_ownership": esg_ownership
     }
 
-    if st.button("Generate ESG Advisory"):
+    # ---- Action Button ----
+    if st.button("Generate ESG Action Plan"):
         try:
             validate_inputs(inputs)
             base_context = build_esg_context(inputs)
@@ -59,46 +102,50 @@ with tab1:
         except Exception as e:
             st.error(str(e))
 
-
-# ============================================================
-# TAB 2 — DOCUMENT-AWARE ESG (ADVANCED EXTENSION)
-# ============================================================
-with tab2:
-    st.header("Document-Aware ESG (Advanced)")
     st.caption(
-        "Optional extension that grounds ESG recommendations using internal company documents. "
-        "The core ESG advisor remains unchanged."
+        "This system provides ESG decision support and prioritization guidance. "
+        "It does not perform regulatory audits or certification."
     )
 
-    st.subheader("Upload ESG-Relevant Documents (Optional)")
+# ============================================================
+# TAB 2 — EVIDENCE-GROUNDED ESG REVIEW
+# ============================================================
+with tab2:
+    st.header("Evidence-Grounded ESG Review")
+    st.caption(
+        "Optional review using internal operational documents to validate declared practices. "
+        "Document evidence is used to strengthen or flag ESG risk assumptions."
+    )
+
+    st.subheader("Internal Operational Documents (Optional)")
 
     waste_doc = st.file_uploader(
-        "1. Waste Management SOP / Guidelines",
+        "Waste Management SOP or Operational Guidelines",
         type=["txt"],
         key="waste_doc"
     )
 
     energy_doc = st.file_uploader(
-        "2. Energy / Operations Note",
+        "Energy or Operations Notes",
         type=["txt"],
         key="energy_doc"
     )
 
     policy_doc = st.file_uploader(
-        "3. Internal Policy / Responsibility Document",
+        "Internal Policy or Responsibility Document",
         type=["txt"],
         key="policy_doc"
     )
 
     vendor_doc = st.file_uploader(
-        "4. Vendor / Disposal Agreement (Optional)",
+        "Vendor or Disposal Agreement (Optional)",
         type=["txt"],
         key="vendor_doc"
     )
 
     documents = {
         "Waste SOP": waste_doc,
-        "Energy Note": energy_doc,
+        "Energy Notes": energy_doc,
         "Policy Document": policy_doc,
         "Vendor Agreement": vendor_doc
     }
@@ -131,26 +178,24 @@ with tab2:
                 retrieved_evidence.extend(chunks)
 
     if retrieved_evidence:
-        st.subheader("Retrieved ESG Evidence")
+        st.subheader("Retrieved Evidence")
         st.info(
-            "The following snippets were retrieved using sparse (BM25) retrieval "
+            "The following excerpts were retrieved using controlled, keyword-based retrieval "
             "and are used as supporting evidence for ESG reasoning."
         )
 
         for ev in retrieved_evidence:
             st.write(f"- {ev}")
 
-        if st.button("Generate ESG Advisory (Document-Grounded)"):
+        if st.button("Generate Evidence-Grounded ESG Action Plan"):
             try:
-                # ---- SAFE DEFAULT HANDLING (FIXES waste_types ERROR) ----
+                # ---- Safe defaults for document-grounded mode ----
                 doc_inputs = inputs.copy()
-
                 if not doc_inputs["waste_types"]:
                     doc_inputs["waste_types"] = ["Mixed"]
 
                 validate_inputs(doc_inputs)
                 base_context = build_esg_context(doc_inputs)
-
                 evidence_text = "\n".join(retrieved_evidence)
 
                 response = run_esg_agent_rag(
@@ -165,5 +210,10 @@ with tab2:
     else:
         st.warning(
             "No documents uploaded yet. Upload at least one document to enable "
-            "document-grounded ESG reasoning."
+            "evidence-grounded ESG reasoning."
         )
+
+    st.caption(
+        "Document evidence is treated as supportive input. "
+        "Missing or unclear documentation is considered an ESG risk signal."
+    )
